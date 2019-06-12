@@ -16,18 +16,18 @@ from gi.repository import GObject
 from threading import Thread
 
 
-APPINDICATOR_ID = 'testindicator'
+APPINDICATOR_ID = 'vpn-indicator'
 
 CURRPATH = os.path.dirname(os.path.realpath(__file__))
 
 class Indicator():
     def __init__(self):
-        self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, "network-error-symbolic", appindicator.IndicatorCategory.SYSTEM_SERVICES)
+        self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, "network-vpn-acquiring-symbolic", appindicator.IndicatorCategory.SYSTEM_SERVICES)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu())
         notify.init(APPINDICATOR_ID)
         vpns = self.check_vpn_connections()
-        self.indicator.set_label("VPN Interfaces: "+vpns+"", APPINDICATOR_ID)
+        self.indicator.set_label(" VPN Interfaces: "+vpns+"", APPINDICATOR_ID)
         # the thread:
         self.update = Thread(target=self.update_vpns)
         # daemonize the thread to make the indicator stopable
@@ -64,12 +64,10 @@ class Indicator():
         except subprocess.CalledProcessError as e:
             pass
 
-        if (num_connected==1):
-            self.indicator.set_icon("network-transmit-symbolic")
-        elif (num_connected>1):
-            self.indicator.set_icon("network-transmit-receive-symbolic")
+        if (num_connected>0):
+            self.indicator.set_icon("network-vpn-symbolic")
         else:
-            self.indicator.set_icon("network-error-symbolic")
+            self.indicator.set_icon("network-vpn-acquiring-symbolic")
 
         return str(num_connected)
 
@@ -79,7 +77,7 @@ class Indicator():
     def update_vpns(self):
         while True:
             time.sleep(10)
-            mention = "VPN Interfaces: "+self.check_vpn_connections()
+            mention = " VPN Interfaces: "+self.check_vpn_connections()
             # apply the interface update using  GObject.idle_add()
             GObject.idle_add(
                 self.indicator.set_label,
